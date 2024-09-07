@@ -9,17 +9,21 @@ import os
 HF_TOKEN = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN")
 client = InferenceClient("microsoft/resnet-50", token=HF_TOKEN)
 
-def resnet50(image: np.ndarray | Image.Image | str) -> dict[str, float]:
-    # Convert the image to bytes
-    if isinstance(image, str):
-        image = Image.open(image)
+def resnet50(image: np.ndarray | Image.Image | str | None) -> dict[str, float]:
+    if image is None:
+        return {}
+    
+    image_in = image
+    # Convert the image to bytes if it is a PIL image or numpy array
     if isinstance(image, np.ndarray):
         image = Image.fromarray(image)
-    image_bytes = BytesIO()
-    image.save(image_bytes, format="PNG")
+    if isinstance(image, Image.Image):
+        image_bytes = BytesIO()
+        image.save(image_bytes, format="PNG")
+        image_in = image_bytes.getvalue()
     
     # Get the model's prediction
-    prediction = client.image_classification(image_bytes.getvalue())
+    prediction = client.image_classification(image_in)
     # Return the top 5 results
     return {pred.label: pred.score for pred in prediction}
 
