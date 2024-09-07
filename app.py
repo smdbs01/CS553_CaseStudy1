@@ -4,12 +4,13 @@ from huggingface_hub import InferenceClient
 import numpy as np
 from io import BytesIO
 import os
+from typing import Union
 
 # Make sure to set the environment variable HF_TOKEN to your Hugging Face token for using InferenceClient
 HF_TOKEN = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN")
 client = InferenceClient("microsoft/resnet-50", token=HF_TOKEN)
 
-def resnet50(image: np.ndarray | Image.Image | str | None) -> dict[str, float]:
+def resnet50(image: Union[np.ndarray, Image.Image, str, None]) -> dict[str, float]:
     if image is None:
         return {}
     
