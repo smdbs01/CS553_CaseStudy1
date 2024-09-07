@@ -2,4 +2,4 @@ __pycache__
 *.pyc
 *venv*
 flagged
-
+.pytest_cache
