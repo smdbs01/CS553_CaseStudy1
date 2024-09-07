@@ -1,2 +1,4 @@
 gradio==4.42.0
 fastapi==0.112.2
+torch
+transformers

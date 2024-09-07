@@ -1,16 +1,30 @@
 import gradio as gr
 
-# Sample Gradio usage
-def greet(name, is_morning, temperature):
-    salutation = "Good morning" if is_morning else "Good evening"#sssss
-    greeting = f"{salutation} {name}. It is {temperature} degrees today"
-    celsius = (temperature - 32) * 5 / 9
-    return greeting, round(celsius, 2)
+from transformers import AutoImageProcessor, ResNetForImageClassification
+import torch
 
-demo = gr.Interface(
-    fn=greet,
-    inputs=["text", "checkbox", gr.Slider(0, 100)],
-    outputs=["text", "number"],
+print("Loading model...")
+processor = AutoImageProcessor.from_pretrained("microsoft/resnet-50")
+model = ResNetForImageClassification.from_pretrained("microsoft/resnet-50")
+print("Model loaded.")
+
+def resnet50(image):
+    inputs = processor(image, return_tensors="pt")
+
+    with torch.no_grad():
+        logits = model(**inputs).logits
+
+    # model predicts one of the 1000 ImageNet classes
+    predicted_label = logits.argmax(-1).item()
+    return model.config.id2label[predicted_label]
+
+ui = gr.Interface(
+    fn=resnet50,
+    inputs=gr.Image(height=224, width=224),
+    outputs=gr.Text(),
+    title="ResNet-50 ImageNet",
+    description="Identify the main object in an image. This model is a ResNet-50 neural network pre-trained on ImageNet."
 )
+
 if __name__ == "__main__":
-    demo.launch()
+    ui.launch()
