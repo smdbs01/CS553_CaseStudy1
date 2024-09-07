@@ -23,7 +23,7 @@ def load_model():
     model = ResNetForImageClassification.from_pretrained("microsoft/resnet-50")
     print("Model loaded.")
 
-def resnet50(image: Union[np.ndarray, Image.Image, str, None], is_local: bool) -> dict[str, float]:
+def resnet50(image: Union[np.ndarray, Image.Image, str, None], is_local: bool = False) -> dict[str, float]:
     if image is None:
         return {}
     
