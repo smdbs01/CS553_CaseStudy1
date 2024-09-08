@@ -31,4 +31,4 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_INF_TOKEN }}
         run: |
-          HF_TOKEN=$HF_TOKEN python -m pytest test.py
+          python -m pytest test.py

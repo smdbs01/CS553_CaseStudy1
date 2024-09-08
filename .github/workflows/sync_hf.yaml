@@ -1,7 +1,8 @@
 name: Sync to Hugging Face hub
 on:
   workflow_run: 
-    workflows: ["Python tests"]
+    workflows: 
+      - Python tests
     types:
       - completed
 
@@ -11,6 +12,7 @@ on:
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v3
         with:
