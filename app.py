@@ -61,14 +61,19 @@ def resnet50(image: Union[np.ndarray, Image.Image, str, None], is_local: bool = 
         return {pred.label: pred.score for pred in prediction}
 
 
-# Define the Gradio interface
-ui = gr.Interface(
-    fn=resnet50,
-    inputs=[gr.Image(), gr.Checkbox(label="Use local model")],
-    outputs=gr.Label(num_top_classes=5),  # Display top 5 results
-    title="ResNet-50 ImageNet",
-    description="Identify the main object in an image with probabilities. This model is a ResNet-50 neural network pre-trained on ImageNet."
-)
-
+with gr.Blocks() as ui:
+    with gr.Column():
+        gr.HTML("<h1 style='text-align: center;font-size: 48px;margin-bottom: 24px;'>ResNet-50 Image Classification</h1>")
+        with gr.Row():
+            with gr.Column():
+                image = gr.Image(label="Upload or drag and drop an image here")
+                submit = gr.Button("Submit", variant="primary")
+            with gr.Column():
+                is_local = gr.Checkbox(label="Check this box to use a local model 🖥️", )
+                output = gr.Label(num_top_classes=5, label="Results will appear here", )
+        gr.HTML("<p style='text-align: center;'>This app uses the <a href='https://huggingface.co/microsoft/resnet-50'>microsoft/resnet-50</a> model.</p>")
+        
+    submit.click(resnet50, inputs=[image, is_local], outputs=output)
+    
 if __name__ == "__main__":
     ui.launch(share=True)
