@@ -45,6 +45,7 @@ def sd_2_1_base(
     num_inference_steps: int,
     width: int,
     height: int,
+    progress: gr.Progress = gr.Progress(track_tqdm=True),
 ) -> Tuple[Union[np.ndarray, Image.Image, str, Path, None], int]:
     if randomize_seed:
         seed = np.random.randint(0, MAX_SEED)
@@ -145,11 +146,20 @@ with gr.Blocks() as ui:
                             step=1,
                             value=28,
                         )
+                gr.Examples(
+                    examples=[
+                        "Cat in the forest",
+                        "Cat flying in the sky",
+                        "Cat in the desert",
+                    ],
+                    inputs=[prompt],
+                )
             with gr.Column():
                 is_local = gr.Checkbox(
                     label="Check this box to use a local model 🖥️",
                 )
                 img_out = gr.Image(label="Generated Image")
+
         gr.HTML(
             f"<p style='text-align: center;'>This app uses the <a href='https://huggingface.co/{model_name}'>{model_name}</a> model.</p>"
         )
