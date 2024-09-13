@@ -5,7 +5,6 @@ import numpy as np
 import os
 from typing import Tuple, Union
 import torch
-import torch.nn.functional as F
 from huggingface_hub import InferenceClient
 from diffusers import StableDiffusionPipeline, EulerDiscreteScheduler
 
