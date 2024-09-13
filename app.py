@@ -3,7 +3,7 @@ from PIL import Image
 import gradio as gr
 import numpy as np
 import os
-from typing import Union
+from typing import Tuple, Union
 import torch
 import torch.nn.functional as F
 from huggingface_hub import InferenceClient
@@ -45,7 +45,7 @@ def sd_2_1_base(
     num_inference_steps: int,
     width: int,
     height: int,
-) -> Union[np.ndarray, Image.Image, str, Path, None]:
+) -> Tuple[Union[np.ndarray, Image.Image, str, Path, None], int]:
     if randomize_seed:
         seed = np.random.randint(0, MAX_SEED)
     generator = torch.Generator().manual_seed(seed)
@@ -117,7 +117,7 @@ with gr.Blocks() as ui:
                             label="Width",
                             minimum=256,
                             maximum=MAX_IMAGE_SIZE,
-                            step=50,
+                            step=64,
                             value=512,
                         )
 
@@ -125,7 +125,7 @@ with gr.Blocks() as ui:
                             label="Height",
                             minimum=256,
                             maximum=MAX_IMAGE_SIZE,
-                            step=50,
+                            step=64,
                             value=512,
                         )
 
