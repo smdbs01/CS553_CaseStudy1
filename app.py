@@ -1,19 +1,36 @@
+import os
 from pathlib import Path
-from PIL import Image
+from typing import Tuple, Union
+
 import gradio as gr
 import numpy as np
-import os
-from typing import Tuple, Union
 import torch
+from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
 from huggingface_hub import InferenceClient
-from diffusers import StableDiffusionPipeline, EulerDiscreteScheduler
+from PIL import Image
+from prometheus_client import Counter, Summary, start_http_server
+
+# metrics
+REQUEST_COUNTER = Counter("app_requests_total", "Total number of requests")
+LOCAL_COUNTER = Counter("app_local_requests_total", "Total number of local requests")
+API_COUNTER = Counter("app_api_requests_total", "Total number of API requests")
+SUCCESSFUL_REQUESTS = Counter(
+    "app_successful_requests_total", "Total number of successful requests"
+)
+FAILED_REQUESTS = Counter(
+    "app_failed_requests_total", "Total number of failed requests"
+)
+REQUEST_DURATION = Summary(
+    "app_request_duration_seconds", "Time spent processing request"
+)
+
 
 MAX_SEED = np.iinfo(np.int32).max
 MAX_IMAGE_SIZE = 1280
 
-
 # Make sure to set the environment variable HF_TOKEN to your Hugging Face token for using InferenceClient
 HF_TOKEN = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN")
+print(f"Using Hugging Face token: {HF_TOKEN}")
 model_name = "stabilityai/stable-diffusion-2-1-base"
 client = InferenceClient(model_name, token=HF_TOKEN)
 
@@ -50,34 +67,41 @@ def sd_2_1_base(
         seed = np.random.randint(0, MAX_SEED)
     generator = torch.Generator().manual_seed(seed)
 
-    if is_local:
-        if scheduler is None or pipe is None:
-            load_model()
+    REQUEST_COUNTER.inc()
+    with REQUEST_DURATION.time():
+        try:
+            if is_local:
+                LOCAL_COUNTER.inc()
 
-        image = pipe(
-            prompt,
-            negative_prompt=negative_prompt,
-            guidance_scale=guidance_scale,
-            num_inference_steps=num_inference_steps,
-            width=width,
-            height=height,
-            generator=generator,
-        ).images[0]
+                image = pipe(
+                    prompt,
+                    negative_prompt=negative_prompt,
+                    guidance_scale=guidance_scale,
+                    num_inference_steps=num_inference_steps,
+                    width=width,
+                    height=height,
+                    generator=generator,
+                ).images[0]
 
-        return image, seed
+                return image, seed
 
-    else:
-        output = client.text_to_image(
-            prompt,
-            negative_prompt=negative_prompt,
-            seed=seed,
-            randomize_seed=randomize_seed,
-            guidance_scale=guidance_scale,
-            num_inference_steps=num_inference_steps,
-            width=width,
-            height=height,
-        )
-        return output, seed
+            else:
+                API_COUNTER.inc()
+
+                output = client.text_to_image(
+                    prompt,
+                    negative_prompt=negative_prompt,
+                    seed=seed,
+                    randomize_seed=randomize_seed,
+                    guidance_scale=guidance_scale,
+                    num_inference_steps=num_inference_steps,
+                    width=width,
+                    height=height,
+                )
+                return output, seed
+        except Exception as e:
+            FAILED_REQUESTS.inc()
+            return str(e), seed
 
 
 with gr.Blocks() as ui:
@@ -180,4 +204,7 @@ with gr.Blocks() as ui:
     )
 
 if __name__ == "__main__":
-    ui.launch(share=True)
+    if scheduler is None or pipe is None:
+        load_model()
+
+    ui.launch()
