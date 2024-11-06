@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  group_9_app:
+    image: smdbs/cs553:cs3
+    environment:
+      - GRADIO_SERVER_NAME=0.0.0.0
+    env_file: .env
+    ports:
+      - "12345:7860"  # Use custom port for Gradio app
+      - "12346:9100"   # Custom port for node exporter metrics
+    networks:
+      - monitoring
+
+  group_9_prom:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    ports:
+      - "12347:9090"  # Custom port for Prometheus
+    networks:
+      - monitoring
+
+  group_9_grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "12348:3000"  # Custom port for Grafana
+    networks:
+      - monitoring
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Change in production
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+networks:
+  monitoring:
+
+volumes:
+  grafana-storage:
