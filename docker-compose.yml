@@ -38,3 +38,7 @@ networks:
   monitoring:
     name: monitoring
     external: true
+
+volumes:
+  grafana-storage:
+    name: group_9_grafana_storage
