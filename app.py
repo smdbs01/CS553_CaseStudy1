@@ -30,7 +30,7 @@ MAX_IMAGE_SIZE = 1280
 
 # Make sure to set the environment variable HF_TOKEN to your Hugging Face token for using InferenceClient
 HF_TOKEN = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN")
-print(f"Using Hugging Face token: {HF_TOKEN}")
+# print(f"Using Hugging Face token: {HF_TOKEN}")
 model_name = "stabilityai/stable-diffusion-2-1-base"
 client = InferenceClient(model_name, token=HF_TOKEN)
 
@@ -68,6 +68,9 @@ def sd_2_1_base(
     generator = torch.Generator().manual_seed(seed)
 
     REQUEST_COUNTER.inc()
+    if not is_local and (scheduler is None or pipe is None):
+        load_model()
+
     with REQUEST_DURATION.time():
         try:
             if is_local:
@@ -204,7 +207,5 @@ with gr.Blocks() as ui:
     )
 
 if __name__ == "__main__":
-    if scheduler is None or pipe is None:
-        load_model()
-
+    start_http_server(8000)
     ui.launch()
