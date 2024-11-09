@@ -7,8 +7,9 @@ services:
       - GRADIO_SERVER_NAME=0.0.0.0
     env_file: .env
     ports:
-      - "12345:7860"  # Use custom port for Gradio app
-      - "12346:9100"   # Custom port for node exporter metrics
+      - "12345:7860" 
+      - "12346:8000"
+      - "12347:9100"  
     networks:
       - monitoring
 
@@ -19,14 +20,14 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
     ports:
-      - "12347:9090"  # Custom port for Prometheus
+      - "12348:9090" 
     networks:
       - monitoring
 
   group_9_grafana:
     image: grafana/grafana-enterprise
     ports:
-      - "12348:3000"  # Custom port for Grafana
+      - "12349:3000" 
     networks:
       - monitoring
     environment:
