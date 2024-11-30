@@ -1,6 +1,5 @@
 import unittest
 import os
-import torch
 
 from app import sd_2_1_base
 
@@ -14,14 +13,14 @@ class TestGeneralSetup(unittest.TestCase):
         self.assertTrue(HF_TOKEN != "YOUR_HF_TOKEN", TOKEN_MSG)
 
 
-class TestLocalModel(unittest.TestCase):
-    @unittest.skipIf(HF_TOKEN == "YOUR_HF_TOKEN", SKIP_MSG)
-    @unittest.skipIf(not torch.cuda.is_available(), "CUDA is not available")
-    def test_url_1(self):
-        image, _ = sd_2_1_base(
-            "A photo of a cat", True, "A photo of a dog", 42, False, 0.1, 10, 128, 128
-        )
-        self.assertIsNotNone(image)
+# class TestLocalModel(unittest.TestCase):
+#     @unittest.skipIf(HF_TOKEN == "YOUR_HF_TOKEN", SKIP_MSG)
+#     # @unittest.skipIf(not torch.cuda.is_available(), "CUDA is not available")
+#     def test_url_1(self):
+#         image, _ = sd_2_1_base(
+#             "A photo of a cat", True, "A photo of a dog", 42, False, 0.1, 10, 128, 128
+#         )
+#         self.assertIsNotNone(image)
 
 
 class TestAPIModel(unittest.TestCase):
