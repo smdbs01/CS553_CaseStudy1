@@ -4,25 +4,28 @@ from typing import Tuple, Union
 
 import gradio as gr
 import numpy as np
-import torch
-from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
+
+# import torch
+
+# from diffusers import EulerDiscreteScheduler, StableDiffusionPipeline
 from huggingface_hub import InferenceClient
 from PIL import Image
-from prometheus_client import Counter, Summary, start_http_server
 
-# metrics
-REQUEST_COUNTER = Counter("app_requests_total", "Total number of requests")
-LOCAL_COUNTER = Counter("app_local_requests_total", "Total number of local requests")
-API_COUNTER = Counter("app_api_requests_total", "Total number of API requests")
-SUCCESSFUL_REQUESTS = Counter(
-    "app_successful_requests_total", "Total number of successful requests"
-)
-FAILED_REQUESTS = Counter(
-    "app_failed_requests_total", "Total number of failed requests"
-)
-REQUEST_DURATION = Summary(
-    "app_request_duration_seconds", "Time spent processing request"
-)
+# from prometheus_client import Counter, Summary, start_http_server
+
+# # metrics
+# REQUEST_COUNTER = Counter("app_requests_total", "Total number of requests")
+# LOCAL_COUNTER = Counter("app_local_requests_total", "Total number of local requests")
+# API_COUNTER = Counter("app_api_requests_total", "Total number of API requests")
+# SUCCESSFUL_REQUESTS = Counter(
+#     "app_successful_requests_total", "Total number of successful requests"
+# )
+# FAILED_REQUESTS = Counter(
+#     "app_failed_requests_total", "Total number of failed requests"
+# )
+# REQUEST_DURATION = Summary(
+#     "app_request_duration_seconds", "Time spent processing request"
+# )
 
 
 MAX_SEED = np.iinfo(np.int32).max
@@ -38,17 +41,17 @@ scheduler = None
 pipe = None
 
 
-def load_model():
-    global scheduler, pipe
-    print("Loading model...")
-    scheduler = EulerDiscreteScheduler.from_pretrained(
-        model_name, subfolder="scheduler"
-    )
-    pipe = StableDiffusionPipeline.from_pretrained(model_name, scheduler=scheduler)
-    pipe.enable_attention_slicing()
-    if torch.cuda.is_available():
-        pipe = pipe.to("cuda")
-    print("Model loaded.")
+# def load_model():
+#     global scheduler, pipe
+#     print("Loading model...")
+#     scheduler = EulerDiscreteScheduler.from_pretrained(
+#         model_name, subfolder="scheduler"
+#     )
+#     pipe = StableDiffusionPipeline.from_pretrained(model_name, scheduler=scheduler)
+#     pipe.enable_attention_slicing()
+#     if torch.cuda.is_available():
+#         pipe = pipe.to("cuda")
+#     print("Model loaded.")
 
 
 def sd_2_1_base(
@@ -65,46 +68,47 @@ def sd_2_1_base(
 ) -> Tuple[Union[np.ndarray, Image.Image, str, Path, None], int]:
     if randomize_seed:
         seed = np.random.randint(0, MAX_SEED)
-    generator = torch.Generator().manual_seed(seed)
+    # generator = torch.Generator().manual_seed(seed)
 
-    REQUEST_COUNTER.inc()
+    # REQUEST_COUNTER.inc()
     if not is_local and (scheduler is None or pipe is None):
-        load_model()
+        # load_model()
+        pass
 
-    with REQUEST_DURATION.time():
-        try:
-            if is_local:
-                LOCAL_COUNTER.inc()
+    # with REQUEST_DURATION.time():
+    try:
+        # if is_local:
+        #     LOCAL_COUNTER.inc()
 
-                image = pipe(
-                    prompt,
-                    negative_prompt=negative_prompt,
-                    guidance_scale=guidance_scale,
-                    num_inference_steps=num_inference_steps,
-                    width=width,
-                    height=height,
-                    generator=generator,
-                ).images[0]
+        #     image = pipe(
+        #         prompt,
+        #         negative_prompt=negative_prompt,
+        #         guidance_scale=guidance_scale,
+        #         num_inference_steps=num_inference_steps,
+        #         width=width,
+        #         height=height,
+        #         generator=generator,
+        #     ).images[0]
 
-                return image, seed
+        #     return image, seed
 
-            else:
-                API_COUNTER.inc()
+        # else:
+        # API_COUNTER.inc()
 
-                output = client.text_to_image(
-                    prompt,
-                    negative_prompt=negative_prompt,
-                    seed=seed,
-                    randomize_seed=randomize_seed,
-                    guidance_scale=guidance_scale,
-                    num_inference_steps=num_inference_steps,
-                    width=width,
-                    height=height,
-                )
-                return output, seed
-        except Exception as e:
-            FAILED_REQUESTS.inc()
-            return str(e), seed
+        output = client.text_to_image(
+            prompt,
+            negative_prompt=negative_prompt,
+            seed=seed,
+            randomize_seed=randomize_seed,
+            guidance_scale=guidance_scale,
+            num_inference_steps=num_inference_steps,
+            width=width,
+            height=height,
+        )
+        return output, seed
+    except Exception as e:
+        # FAILED_REQUESTS.inc()
+        return str(e), seed
 
 
 with gr.Blocks() as ui:
@@ -207,5 +211,5 @@ with gr.Blocks() as ui:
     )
 
 if __name__ == "__main__":
-    start_http_server(8000)
+    # start_http_server(8000)
     ui.launch()
