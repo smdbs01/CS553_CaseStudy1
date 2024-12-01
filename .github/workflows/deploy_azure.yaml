@@ -1,0 +1,36 @@
+name: deploy_azure
+
+on:
+  workflow_run: 
+    workflows: 
+      - Python tests
+    types:
+      - completed
+  
+  # to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions: 
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          containerAppName: cs553
+          resourceGroup: NetworkWatcherRG
+          imageToDeploy: docker.io/smdbs/cs553:cs4
+          targetPort: 7860
+          environmentVariables: 
